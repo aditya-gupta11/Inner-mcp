@@ -1,0 +1,36 @@
+# Your model configuration
+model:
+  provider: openai_compat
+  base_url: https://fileupload-alpha.q0.dev/q0/playground/qwen72b
+  model_name: qwen2.5-vl-72b
+  api_key: null                       # no key needed
+  max_tokens: 4096
+  temperature: 0.2
+  timeout_seconds: 120
+
+# How many tool-call rounds your model can do before forced answer
+agent:
+  max_iterations: 8
+  force_answer_after: 6         # after 6 tool calls, tell model to conclude
+                                # AND stop sending tool schemas (saves ~500 tokens)
+
+# Task result cache
+cache:
+  ttl_seconds: 30               # how long to cache identical tasks
+                                # set to 0 to disable
+
+# MCP server settings
+server:
+  transport: stdio              # stdio for VS Code / Codex
+  log_level: debug
+  log_file: ~/.mcp-inner/server.log
+
+# Real MCP servers to proxy tool calls to
+# qwen2.5-vl-72b calls these tools via their real MCP schemas
+mcp_servers:
+  - name: "playwright"
+    command: ["npx", "@playwright/mcp", "--headless"]
+
+  - name: "filesystem"
+    # Resolved from the client's project root, MCP_WORKSPACE_ROOT, or process cwd.
+    command: ["npx", "@modelcontextprotocol/server-filesystem", "{workspace_root}"]
