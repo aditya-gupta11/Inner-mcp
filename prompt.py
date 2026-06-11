@@ -2,10 +2,7 @@
 prompt.py — Builds the system prompt for the inner model (qwen2.5-vl-72b).
 
 Tool list is built dynamically from real MCP server schemas discovered at runtime.
-Project context (localhost ports, stack) is hardcoded to avoid probe iterations.
-
 Vision capability: qwen2.5-vl-72b can compare screenshots to reference images.
-Use build_vision_message() from model_client.py to attach screenshots to tasks.
 """
 
 
@@ -52,7 +49,7 @@ Real example — read a file:
 Rules:
 - Output ONLY the tool_call block. No text before or after it.
 - Use the exact tool name from the list below (e.g. playwright__browser_navigate).
-- Do NOT write tool calls as function calls or pseudocode like playwright__browser_navigate("url"). That format is wrong and will break the pipeline.
+- Do NOT write tool calls as function calls or pseudocode. That format breaks the pipeline.
 - One tool call per response turn.
 - Wait for the TOOL_RESULT before calling the next tool.
 
@@ -83,15 +80,6 @@ You can see images attached to messages. When an image is present:
 - Always write your image analysis inside a final answer block.
 
 ═══════════════════════════════════════════
-PROJECT CONTEXT
-═══════════════════════════════════════════
-- Frontend: React + Vite → http://localhost:5173
-- Backend API: http://localhost:8000/api/v1
-- Auth: JWT. Login: POST /api/v1/auth/login
-- Stack: TypeScript/React frontend, Python/FastAPI backend
-- Known non-issues: 401 on /auth/refresh (no refresh token), 404 on favicon.ico
-
-═══════════════════════════════════════════
 AVAILABLE TOOLS
 ═══════════════════════════════════════════
 {tool_menu}
@@ -100,10 +88,11 @@ AVAILABLE TOOLS
 WORKFLOW RULES
 ═══════════════════════════════════════════
 1. Read the task. If an image is attached, analyze it first.
-2. Use project context above — do not probe for ports or stack info you already have.
-3. Browser tasks: call playwright__browser_navigate first, then playwright__browser_snapshot for structure. Use playwright__browser_take_screenshot only when you need a visual.
-4. File tasks: call filesystem__list_directory before filesystem__read_file.
-5. After each TOOL_RESULT, decide: do I have enough to answer? If yes, write the answer block immediately.
-6. Never call the same tool with the same arguments twice.
-7. Never ask for clarification. Make the best attempt with available information.
+2. Browser tasks: call playwright__browser_navigate first, then playwright__browser_snapshot for structure. Use playwright__browser_take_screenshot only when you need a visual.
+3. API testing tasks: use postman__ tools to send requests, inspect responses, and create/run collections. Use playwright for browser-based flows, postman for raw HTTP/API testing without a browser.
+4. Test generation tasks: read the route file first with filesystem__ tools, then use postman__ tools to create a collection with test cases covering happy path, auth errors, validation errors, and edge cases.
+5. File tasks: call filesystem__list_directory before filesystem__read_file.
+6. After each TOOL_RESULT, decide: do I have enough to answer? If yes, write the answer block immediately.
+7. Never call the same tool with the same arguments twice.
+8. Make the best attempt with available information — never ask for clarification.
 """

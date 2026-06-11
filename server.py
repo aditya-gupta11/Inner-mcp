@@ -37,6 +37,8 @@ mcp = FastMCP(
         "5. UI/DESIGN comparison tasks: pass the reference design image as reference_image "
         "(base64 data-URI, file path, or URL). The inner model (qwen2.5-vl-72b) will "
         "visually compare it against the current UI and list the exact changes needed.\n"
+        "6. ANY API testing task (send HTTP request, create Postman collection, run tests, "
+        "generate test cases for an endpoint, check response schema) → call execute_task.\n"
         "The inner model handles all tool work internally via real MCP servers. "
         "You only receive the final answer. This saves your tokens on every tool-heavy task."
     ),
@@ -80,7 +82,10 @@ def _workspace_root_from_ctx(ctx: Context | None) -> Path | None:
         "The inner model (qwen2.5-vl-72b) executes all tool work via Playwright MCP + "
         "Filesystem MCP internally. You receive only the final answer — no raw tool output. "
         "Returns: { answer: str, tools_used: list[str], iterations: int, "
-        "confidence: 'high'|'medium'|'low', files_read: list[str], vision_used: bool }"
+        "confidence: 'high'|'medium'|'low', files_read: list[str], vision_used: bool }. "
+        "API TESTING TASKS: send HTTP requests, create Postman collections, generate test "
+        "cases for endpoints (happy path, auth, validation, edge cases), run existing "
+        "collections, and inspect response schemas."
     )
 )
 async def execute_task(

@@ -328,7 +328,7 @@ class TaskHandler:
         files_read: list[str] = []
         seen_calls: set[str] = set()
         iterations = 0
-        consecutive_bad_format = 0  # how many turns in a row the model missed the format
+        consecutive_bad_format = 0
 
         log.info(
             "Run started: task_chars=%s vision=%s workspace_root=%s system_prompt_chars=%s",
@@ -466,10 +466,8 @@ class TaskHandler:
                 iterations, consecutive_bad_format, len(response), response[:300],
             )
 
-            # Hard exit after 2 consecutive bad format responses
             if consecutive_bad_format >= 2:
                 log.error("Model failed format twice in a row — giving up")
-                # If the model wrote something useful (just not in a block), surface it
                 fallback_answer = response.strip() if response.strip() else (
                     "The model did not produce a usable response after multiple attempts."
                 )
@@ -483,7 +481,6 @@ class TaskHandler:
                     "warning": "Model failed format compliance after nudge",
                 }
 
-            # First bad response — inject the appropriate nudge and retry
             nudge = _NUDGE_EMPTY if not response.strip() else _NUDGE_BAD_FORMAT
             messages.append({"role": "user", "content": nudge})
             log.info("Injected format nudge, retrying...")

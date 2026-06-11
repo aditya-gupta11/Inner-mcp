@@ -5,6 +5,7 @@ import base64
 import json
 import logging
 import os
+import re
 from contextlib import AsyncExitStack
 from pathlib import Path
 from typing import Any
@@ -18,6 +19,19 @@ log = logging.getLogger("mcp_client")
 def _expand_value(value: str, workspace_root: Path) -> str:
     """Expand environment variables and the configured workspace placeholder."""
     return os.path.expandvars(value).replace("{workspace_root}", str(workspace_root))
+
+
+def _missing_environment_variables(value: str) -> list[str]:
+    """Return environment references that cannot be expanded."""
+    names = []
+    for braced, plain in re.findall(
+        r"\$\{([A-Za-z_][A-Za-z0-9_]*)\}|\$([A-Za-z_][A-Za-z0-9_]*)",
+        value,
+    ):
+        name = braced or plain
+        if name not in os.environ:
+            names.append(name)
+    return names
 
 
 class MCPServerConnection:
@@ -42,6 +56,16 @@ class MCPServerConnection:
         configured_env = self.config.get("env")
         env = None
         if configured_env:
+            missing = sorted({
+                name
+                for value in configured_env.values()
+                for name in _missing_environment_variables(str(value))
+            })
+            if missing:
+                raise ValueError(
+                    f"MCP server {self.name!r} requires missing environment "
+                    f"variable(s): {', '.join(missing)}"
+                )
             env = {
                 **os.environ,
                 **{

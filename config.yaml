@@ -34,3 +34,8 @@ mcp_servers:
   - name: "filesystem"
     # Resolved from the client's project root, MCP_WORKSPACE_ROOT, or process cwd.
     command: ["npx", "@modelcontextprotocol/server-filesystem", "{workspace_root}"]
+    
+  - name: "postman"
+    command: ["npx", "-y", "@postman/postman-mcp-server@latest", "--full"]
+    env:
+      POSTMAN_API_KEY: "${POSTMAN_API_KEY}"
